@@ -1,10 +1,12 @@
 const mongoose = require("mongoose");
+const moment = require('moment-timezone');
 
 const productSchema = mongoose.Schema({
     name:{
         type:String,
         required:[true, "Please Enter Product Name"],
-        trim:true
+        trim:true,
+        unique:true
     },
     description:{
         type:String,
@@ -60,9 +62,16 @@ const productSchema = mongoose.Schema({
         }
     ],
     postCreatedAt:{
-        type:Date,
-        default:Date.now
+        type:String,
+        default:moment.tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss') // Converting The UTC Timezone To IST Timezone
     }
-})
+});
+
+productSchema.pre('save', function(next) { // Converting The UTC Timezone To IST Timezone
+    if (this.isNew || this.isModified('postCreatedAt')) {
+        this.postCreatedAt = moment.tz(this.postCreatedAt, 'Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
+    }
+    next();
+});
 
 module.exports = mongoose.model("Product", productSchema);
